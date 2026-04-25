@@ -1,0 +1,274 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Sora:wght@300;400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
+
+@import "tailwindcss";
+
+@theme {
+  /* Brand colors */
+  --color-primary-50: #E6F9ED;
+  --color-primary-100: #C2F0D3;
+  --color-primary-200: #85E1A8;
+  --color-primary-300: #47D37D;
+  --color-primary-400: #0AC452;
+  --color-primary-500: #04A63D;
+  --color-primary-600: #038530;
+  --color-primary-700: #026324;
+  --color-primary-800: #014218;
+  --color-primary-900: #00210C;
+
+  /* Fonts */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Sora", system-ui, sans-serif;
+  --font-mono: "Space Grotesk", monospace;
+}
+
+/* ─── CSS Color Variables (Theme) ─────────────────────────────── */
+:root,
+body {
+  /* Dark mode defaults */
+  --bg-base: #0B0F14;
+  --bg-secondary: #111620;
+  --bg-tertiary: #1A1F2B;
+  --bg-card: rgba(26, 31, 43, 0.7);
+  --bg-card-solid: #141923;
+
+  --text-primary: #F8FAFC;
+  --text-secondary: rgba(248, 250, 252, 0.6);
+  --text-muted: rgba(248, 250, 252, 0.35);
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-card: rgba(4, 166, 61, 0.10);
+  --border-medium: rgba(255, 255, 255, 0.10);
+
+  --grid-line-strong: rgba(4, 166, 61, 0.06);
+  --grid-line-weak: rgba(4, 166, 61, 0.03);
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 30px rgba(4, 166, 61, 0.3);
+}
+
+body.light {
+  --bg-base: #F1F5F9;
+  --bg-secondary: #E8EFF7;
+  --bg-tertiary: #FFFFFF;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-solid: #FFFFFF;
+
+  --text-primary: #0F172A;
+  --text-secondary: rgba(15, 23, 42, 0.65);
+  --text-muted: rgba(15, 23, 42, 0.40);
+
+  --border-subtle: rgba(15, 23, 42, 0.07);
+  --border-card: rgba(4, 166, 61, 0.15);
+  --border-medium: rgba(15, 23, 42, 0.12);
+
+  --grid-line-strong: rgba(4, 166, 61, 0.07);
+  --grid-line-weak: rgba(4, 166, 61, 0.04);
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 0 30px rgba(4, 166, 61, 0.2);
+}
+
+/* ─── Base Styles ─────────────────────────────────────────────── */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-snap-type: y mandatory;
+    overflow-y: scroll;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1A1F2B;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #04A63D;
+    border-radius: 4px;
+  }
+}
+
+/* ─── Utility Classes ─────────────────────────────────────────── */
+@layer utilities {
+
+  /* Fonts */
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  /* Snap sections */
+  .snap-section {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* Section background helpers */
+  .bg-theme-base {
+    background-color: var(--bg-base);
+  }
+
+  .bg-theme-secondary {
+    background-color: var(--bg-secondary);
+  }
+
+  .bg-theme-card {
+    background-color: var(--bg-card);
+  }
+
+  /* Text helpers */
+  .text-theme-primary {
+    color: var(--text-primary);
+  }
+
+  .text-theme-secondary {
+    color: var(--text-secondary);
+  }
+
+  .text-theme-muted {
+    color: var(--text-muted);
+  }
+
+  /* Border helpers */
+  .border-theme-subtle {
+    border-color: var(--border-subtle);
+  }
+
+  .border-theme-card {
+    border-color: var(--border-card);
+  }
+
+  .border-theme-medium {
+    border-color: var(--border-medium);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, #04A63D 0%, #06B6D4 60%, #04A63D 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: gradientShift 4s ease infinite;
+  }
+
+  /* Glass card */
+  .card-glass {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Blueprint grid */
+  .blueprint-bg {
+    background-color: var(--bg-base);
+    background-image:
+      linear-gradient(var(--grid-line-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line-strong) 1px, transparent 1px),
+      linear-gradient(var(--grid-line-weak) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line-weak) 1px, transparent 1px);
+    background-size: 40px 40px, 40px 40px, 8px 8px, 8px 8px;
+  }
+
+  /* Button primary */
+  .btn-primary {
+    background: linear-gradient(135deg, #04A63D, #038530);
+    color: white;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.025em;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(4, 166, 61, 0.4);
+    background: linear-gradient(135deg, #0AC452, #04A63D);
+  }
+
+  /* Section label */
+  .section-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #04A63D;
+    display: block;
+  }
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────── */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% center;
+  }
+
+  50% {
+    background-position: 100% center;
+  }
+
+  100% {
+    background-position: 0% center;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes glowPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(4, 166, 61, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(4, 166, 61, 0.6);
+  }
+}
