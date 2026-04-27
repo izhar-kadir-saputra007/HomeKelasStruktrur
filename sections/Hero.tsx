@@ -132,14 +132,14 @@ export default function Hero() {
             }}
             className="mb-6"
           >
-            <h1 className="font-display font-bold leading-[1.08] tracking-tight text-theme-primary">
+            <h1 className="font-display font-bold leading-[2.08] tracking-tight text-theme-primary">
               <span className="block text-3xl md:text-5xl lg:text-7xl">
-                Belajar di{" "}
-                <span className="gradient-text"> Kelas Struktur</span>
+                Siap Menjadi{" "}
+               
               </span>
-              <span className="block text-2xl md:text-4xl lg:text-6xl">
-                Di bimbing dari NOL di temani dari BASIC dan bisa mentoring{" "}
-                <span className="gradient-text">SETIAP HARI</span>
+              <span className="block text-2xl md:text-4xl lg:text-5xl">
+               Seorang Engineer di <br />{" "}
+                <span className="gradient-text">KELAS STRUKTUR</span>
               </span>
             </h1>
           </motion.div>
