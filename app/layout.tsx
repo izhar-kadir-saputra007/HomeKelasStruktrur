@@ -41,7 +41,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" suppressHydrationWarning>
+    <html lang="id" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${sora.variable} ${spaceGrotesk.variable} font-sans antialiased`}
         suppressHydrationWarning
@@ -49,11 +49,11 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
           <WhatsAppPopup 
-            phoneNumber="6281234567890"
+            phoneNumber="6285343602030"
             message="Halo, saya tertarik dengan Kelas Struktur"
             companyName="Kelas Struktur"
-            email="support@kelasstruktur.com"
-            operatingHours="Senin - Jumat, 09:00 - 18:00 WIB"
+            email="Admin@kelasstrutkru.com"
+            operatingHours="Kelas Struktur siap membantu Anda 24/7, kapan pun Anda butuh."
           />
         </ThemeProvider>
       </body>

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getAllCourses } from '@/lib/tutor-api';
 
 export default async function CoursesPage() {
+  
   let courses: any[] = [];
   let error = null;
 

@@ -12,27 +12,21 @@ export default function CallToAction() {
     return (
         <section
             id="cta"
-            className="snap-section relative overflow-hidden"
+            className="snap-section relative overflow-hidden bg-theme-base"
             style={{ minHeight: "100vh" }}
         >
-            {/* Background */}
-            <div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(180deg, #0B0F14 0%, #0A0E12 100%)" }}
-            />
-
-            {/* Center radial glow */}
+            {/* Center radial glow - menggunakan CSS variable untuk warna yang sesuai tema */}
             <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                    background: "radial-gradient(ellipse at 50% 50%, rgba(4,166,61,0.12) 0%, transparent 65%)",
+                    background: "radial-gradient(ellipse at 50% 50%, rgba(4,166,61,var(--glow-opacity, 0.12)) 0%, transparent 65%)",
                 }}
             />
 
-            {/* Blueprint grid */}
+            {/* Blueprint grid - sudah support theme dari global.css */}
             <div className="absolute inset-0 blueprint-bg opacity-30 pointer-events-none" />
 
-            {/* Animated rings */}
+            {/* Animated rings - menggunakan border dengan CSS variable */}
             {[280, 420, 560, 700].map((size, i) => (
                 <motion.div
                     key={i}
@@ -58,29 +52,29 @@ export default function CallToAction() {
                     </span>
                 </motion.div>
 
-                {/* Main headline */}
+                {/* Main headline - text menggunakan text-theme-primary */}
                 <motion.h2
                     initial={{ opacity: 0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, delay: 0.1, ease: [0.25, 0.1, 0.25, 1] }}
-                    className="font-display font-bold text-[clamp(2.2rem,6vw,4.5rem)] text-white leading-[1.1] tracking-tight mb-6"
+                    className="font-display font-bold text-[clamp(2.2rem,6vw,4.5rem)] text-theme-primary leading-[1.1] tracking-tight mb-6"
                 >
                     Siap Jadi Engineer
                     <br />
                     <span className="gradient-text">Profesional?</span>
                 </motion.h2>
 
-                {/* Subtext */}
+                {/* Subtext - menggunakan text-theme-secondary */}
                 <motion.p
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.7, delay: 0.2 }}
-                    className="text-white/50 text-[clamp(0.95rem,2vw,1.15rem)] leading-relaxed max-w-2xl mb-12 font-light"
+                    className="text-theme-secondary text-[clamp(0.95rem,2vw,1.15rem)] leading-relaxed max-w-2xl mb-12 font-light"
                 >
                     Bergabunglah dengan lebih dari{" "}
-                    <span className="text-primary-400 font-semibold">3.600+ engineer</span> yang sudah
+                    <span className="text-primary-400 font-semibold">4.000+ engineer</span> yang sudah
                     meningkatkan keahlian mereka bersama Kelas Struktur. Daftar gratis, mulai belajar hari
                     ini.
                 </motion.p>
@@ -107,22 +101,22 @@ export default function CallToAction() {
                     <motion.button
                         onClick={() => handleScroll("#kelas")}
                         whileHover={{ scale: 1.02 }}
-                        className="px-8 py-5 rounded-2xl border border-white/10 text-white/60 hover:text-white hover:border-white/20 font-medium text-base tracking-wide transition-all"
+                        className="px-8 py-5 rounded-2xl border border-theme-border text-theme-secondary hover:text-theme-primary hover:border-primary-500/30 font-medium text-base tracking-wide transition-all"
                     >
                         Lihat Semua Kelas
                     </motion.button>
                 </motion.div>
 
-                {/* Trust badges */}
+                {/* Trust badges - menggunakan text-theme-muted dan border-theme-subtle */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.7, delay: 0.5 }}
-                    className="flex flex-wrap items-center justify-center gap-6 mt-14 pt-10 border-t border-white/5"
+                    className="flex flex-wrap items-center justify-center gap-6 mt-14 pt-10 border-t border-theme-subtle"
                 >
                     {["Daftar Gratis", "Tanpa Kartu Kredit", "Akses Seumur Hidup", "Sertifikat Resmi"].map((badge, i) => (
-                        <div key={i} className="flex items-center gap-2 text-white/35 text-sm">
+                        <div key={i} className="flex items-center gap-2 text-theme-muted text-sm">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
                             {badge}
                         </div>

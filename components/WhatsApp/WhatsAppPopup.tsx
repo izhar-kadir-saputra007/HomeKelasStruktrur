@@ -14,11 +14,11 @@ interface WhatsAppPopupProps {
 }
 
 const WhatsAppPopup = ({
-  phoneNumber = "6281234567890",
+  phoneNumber = "6285343602030",
   message = "Halo, saya tertarik dengan Kelas Struktur",
   companyName = "Kelas Struktur",
-  email = "support@kelasstruktur.com",
-  operatingHours = "Senin - Jumat, 09:00 - 18:00 WIB",
+  email = "Admin@kelasstrutkru.com",
+  operatingHours = "Kelas Struktur siap membantu Anda 24/7, kapan pun Anda butuh.",
 }: WhatsAppPopupProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -245,12 +245,7 @@ const WhatsAppPopup = ({
                     </div>
                   </div>
 
-                  {/* Footer */}
-                  <div className="p-4 border-t border-primary-500/10 bg-black/5">
-                    <p className="text-xs text-center text-theme-muted">
-                      Biasanya dibalas dalam 1-2 jam
-                    </p>
-                  </div>
+                 
                 </>
               )}
             </GlassSurface>

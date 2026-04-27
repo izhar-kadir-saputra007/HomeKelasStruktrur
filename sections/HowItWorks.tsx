@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { UserPlus, LayoutGrid, Rocket } from "lucide-react";
+import { UserPlus, LayoutGrid, Rocket, CalendarCheck } from "lucide-react";
 
 const steps = [
     {
@@ -34,6 +34,17 @@ const steps = [
         accent: "#F59E0B",
         accentBg: "rgba(245,158,11,0.10)",
         accentBorder: "rgba(245,158,11,0.22)",
+        connectorFrom: "#F59E0B",
+        connectorTo: "#8B5CF6",
+    },
+    {
+        num: "04",
+        icon: CalendarCheck,
+        title: "Mentoring Setiap Hari",
+        desc: "Dapatkan bimbingan langsung dari mentor berpengalaman setiap hari. Tanya jawab, diskusi kasus, dan solusi cepat untuk setiap kendala belajarmu.",
+        accent: "#8B5CF6",
+        accentBg: "rgba(139,92,246,0.10)",
+        accentBorder: "rgba(139,92,246,0.22)",
         connectorFrom: "transparent",
         connectorTo: "transparent",
     },
@@ -65,7 +76,7 @@ export default function HowItWorks() {
                     <p className="section-label mb-4">Cara Kerja</p>
                     <h2 className="font-display font-bold text-[clamp(2rem,5vw,3.5rem)] text-theme-primary tracking-tight leading-tight mb-4">
                         Mulai dalam{" "}
-                        <span className="gradient-text">3 Langkah</span>
+                        <span className="gradient-text">4 Langkah</span>
                     </h2>
                     <p className="text-theme-secondary max-w-md mx-auto text-base leading-relaxed">
                         Proses yang simpel dan terarah agar kamu langsung bisa fokus pada yang terpenting — belajar.

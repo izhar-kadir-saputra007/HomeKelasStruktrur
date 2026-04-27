@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
 import Image from "next/image";
+import VideoTestimonials from "@/sections/VideoTestimonials";
 
 const testimonials = [
     {
@@ -130,7 +131,7 @@ export default function Testimonials() {
     const duplicatedTestimonials = [...testimonials, ...testimonials, ...testimonials];
     
     // Bagi menjadi 3 baris
-    const rows = chunkArray(duplicatedTestimonials, Math.ceil(duplicatedTestimonials.length / 3));
+    const rows = chunkArray(duplicatedTestimonials, Math.ceil(duplicatedTestimonials.length / 2));
 
     const gradientColors = [
         "from-primary-500 to-emerald-600",
@@ -141,19 +142,13 @@ export default function Testimonials() {
     return (
         <section
             id="testimoni"
-            className="snap-section relative overflow-hidden"
+            className="snap-section relative overflow-hidden bg-theme-base"
             style={{ minHeight: "100vh" }}
         >
-            {/* Background dengan gaya dari komponen pertama */}
-            <div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(180deg, #0E1319 0%, #0B0F14 100%)" }}
-            />
-            
-            {/* Blueprint grid overlay */}
+            {/* Blueprint grid overlay - menggunakan CSS variable dari global */}
             <div className="absolute inset-0 blueprint-bg opacity-20 pointer-events-none" />
             
-            {/* Glow effects */}
+            {/* Glow effects - menggunakan CSS variable yang support light/dark */}
             <div
                 className="absolute top-0 right-0 w-1/2 h-1/2 pointer-events-none opacity-10"
                 style={{ background: "radial-gradient(ellipse at right top, #04A63D 0%, transparent 70%)" }}
@@ -228,42 +223,10 @@ export default function Testimonials() {
                             ))}
                         </div>
                     </div>
-
-                    {/* Baris 3 - Bergerak ke Kiri (lebih cepat) */}
-                    <div className="relative flex overflow-hidden group">
-                        <div className="flex animate-infinite-scroll-left-fast">
-                            {rows[2]?.map((testimonial, index) => (
-                                <TestimonialCard 
-                                    key={`row3-${index}`} 
-                                    testimonial={testimonial} 
-                                    color={gradientColors[index % 3]}
-                                />
-                            ))}
-                        </div>
-                        <div className="flex animate-infinite-scroll-left-fast" aria-hidden="true">
-                            {rows[2]?.map((testimonial, index) => (
-                                <TestimonialCard 
-                                    key={`row3-duplicate-${index}`} 
-                                    testimonial={testimonial} 
-                                    color={gradientColors[index % 3]}
-                                />
-                            ))}
-                        </div>
-                    </div>
                 </div>
 
-                {/* Bottom indicator */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.3 }}
-                    className="text-center mt-12"
-                >
-                    <p className="text-theme-muted text-xs tracking-widest uppercase">
-                        {testimonials.length}+ Alumni Telah Merasakan Manfaatnya
-                    </p>
-                </motion.div>
+                {/* Video Testimonials - akan mengikuti tema dari parent */}
+                <VideoTestimonials />
             </div>
 
             <style jsx>{`

@@ -1,305 +1,482 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, Variants } from "framer-motion";
-import { ArrowRight, Clock, Users, BookOpen, ChevronRight, Sparkles, Calendar, Lock } from "lucide-react";
+import {
+  ArrowRight,
+  Clock,
+  BookOpen,
+  Sparkles,
+  Calendar,
+  Lock,
+  Target,
+} from "lucide-react";
 import Image from "next/image";
-import AnimatedSection from "@/components/AnimatedSection";
+import { getAllCourses } from "@/lib/tutor-api";
 
-const classes = [
-    {
-        id: 1,
-        title: "Desain Struktur Gedung",
-        subtitle: "Perencanaan struktur gedung beton bertulang tahan gempa",
-        image: "/images/courses/DesainStrukturGedung.webp",
-        modules: 24,
-        duration: "12 Minggu",
-        students: "3.2K", // string
-        status: "active",
-        featured: true,
-        color: "from-emerald-500 to-primary-500",
-    },
-    {
-        id: 2,
-        title: "Analisis Beban Gempa",
-        subtitle: "Pemodelan dan analisis beban gempa dengan SNI terbaru",
-        image: "/images/courses/DesainStrukturGedung.webp",
-        modules: 18,
-        duration: "8 Minggu",
-        students: "2.1K", // string
-        status: "active",
-        featured: false,
-        color: "from-blue-500 to-cyan-500",
-    },
-    {
-        id: 3,
-        title: "Struktur Baja Modern",
-        subtitle: "Desain struktur baja untuk high-rise building",
-        image: "/images/courses/DesainStrukturGedung.webp",
-        modules: 20,
-        duration: "10 Minggu",
-        students: "1.8K", // string
-        status: "active",
-        featured: false,
-        color: "from-purple-500 to-pink-500",
-    },
-    {
-        id: 4,
-        title: "Foundation Engineering",
-        subtitle: "Perencanaan pondasi dalam dan dangkal",
-        image: "/images/courses/DesainStrukturGedung.webp",
-        modules: 16,
-        duration: "8 Minggu",
-        students: 0, // number
-        status: "coming-soon",
-        featured: false,
-        releaseDate: "Maret 2025",
-        color: "from-orange-500 to-red-500",
-    },
-    {
-        id: 5,
-        title: "Bridge Structure Design",
-        subtitle: "Perencanaan struktur jembatan modern",
-        image: "/images/courses/DesainStrukturGedung.webp",
-        modules: 22,
-        duration: "10 Minggu",
-        students: 0, // number
-        status: "coming-soon",
-        featured: false,
-        releaseDate: "April 2025",
-        color: "from-teal-500 to-green-500",
-    },
-    {
-        id: 6,
-        title: "Structural Dynamics",
-        subtitle: "Dinamika struktur untuk bangunan tingkat tinggi",
-        image: "/images/courses/DesainStrukturGedung.webp",
-        modules: 20,
-        duration: "12 Minggu",
-        students: 0, // number
-        status: "coming-soon",
-        featured: false,
-        releaseDate: "Mei 2025",
-        color: "from-indigo-500 to-purple-500",
-    },
-];
+// Interface untuk data course dari API
+interface CourseFromAPI {
+  ID: number;
+  post_title: string;
+  post_excerpt: string;
+  thumbnail_url: string;
+  additional_info: {
+    course_duration: Array<{ hours: number; minutes: number; seconds: number }>;
+    course_level: string[];
+    course_requirements: string[];
+    course_target_audience: string[];
+    course_benefits: string[];
+  };
+  ratings?: {
+    rating_count: number | string;
+    rating_sum: number | string;
+    rating_avg: number | string;
+    count_by_value: Record<string, number | string>;
+  };
+  post_author: {
+    display_name: string;
+  };
+}
 
-// Perbaiki containerVariants dengan tipe Variants
+// Interface untuk data course yang sudah ditransformasi untuk UI
+interface TransformedCourse {
+  id: number;
+  title: string;
+  subtitle: string;
+  image: string;
+  modules: number;
+  duration: string;
+  status: "active" | "coming-soon";
+  featured: boolean;
+  color: string;
+  releaseDate?: string;
+  targetAudience: string[];
+  benefits: string[];
+}
+
+// 🔥 KONFIGURASI CACHE
+const CACHE_KEY = "tutor_courses_cache";
+const CACHE_DURATION = 30 * 60 * 1000; // 30 menit
+
+interface CacheData {
+  data: TransformedCourse[];
+  timestamp: number;
+}
+
+function saveToCache(courses: TransformedCourse[]) {
+  try {
+    const cacheData: CacheData = {
+      data: courses,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+  } catch (error) {
+    console.warn("⚠️ Failed to save cache:", error);
+  }
+}
+
+function loadFromCache(): TransformedCourse[] | null {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+
+    const cacheData: CacheData = JSON.parse(cached);
+    const isExpired = Date.now() - cacheData.timestamp > CACHE_DURATION;
+
+    if (isExpired) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+
+    return cacheData.data;
+  } catch (error) {
+    console.warn("⚠️ Failed to load cache:", error);
+    return null;
+  }
+}
+
+// Helper functions
+function getDurationFromAPI(course: CourseFromAPI): string {
+  const duration = course.additional_info?.course_duration?.[0];
+  if (!duration) return "Coming Soon";
+  const hours = duration.hours || 0;
+  const minutes = duration.minutes || 0;
+  if (hours > 0 && minutes > 0) return `${hours} Jam ${minutes} Menit`;
+  if (hours > 0) return `${hours} Jam`;
+  if (minutes > 0) return `${minutes} Menit`;
+  return "Flexible";
+}
+
+function formatTextList(text: string): string[] {
+  if (!text) return [];
+  const items = text.split(/\r\n|\n/);
+  return items.filter((item) => item.trim().length > 0).map((item) => item.trim());
+}
+
+function getModulesEstimate(course: CourseFromAPI): number {
+  const duration = course.additional_info?.course_duration?.[0];
+  if (!duration) return 10;
+  const hours = duration.hours || 0;
+  const minutes = duration.minutes || 0;
+  const totalMinutes = hours * 60 + minutes;
+  return Math.max(8, Math.floor(totalMinutes / 40));
+}
+
+function getCourseColor(title: string): string {
+  const titleLower = title.toLowerCase();
+  if (titleLower.includes("gedung") || titleLower.includes("bangunan"))
+    return "from-emerald-500 to-primary-500";
+  if (titleLower.includes("gempa") || titleLower.includes("seismic"))
+    return "from-blue-500 to-cyan-500";
+  if (titleLower.includes("baja") || titleLower.includes("steel"))
+    return "from-purple-500 to-pink-500";
+  if (titleLower.includes("pondasi") || titleLower.includes("foundation"))
+    return "from-orange-500 to-red-500";
+  if (titleLower.includes("jembatan") || titleLower.includes("bridge"))
+    return "from-teal-500 to-green-500";
+  if (titleLower.includes("dinamika") || titleLower.includes("dynamic"))
+    return "from-indigo-500 to-purple-500";
+  return "from-primary-500 to-secondary-500";
+}
+
+function transformCourse(course: CourseFromAPI, index: number): TransformedCourse {
+  const isComingSoon = course.ID === 9999;
+  let targetAudience: string[] = [];
+  let benefits: string[] = [];
+
+  if (course.additional_info?.course_target_audience?.[0]) {
+    targetAudience = formatTextList(course.additional_info.course_target_audience[0]);
+  }
+  if (course.additional_info?.course_benefits?.[0]) {
+    benefits = formatTextList(course.additional_info.course_benefits[0]);
+  }
+
+  return {
+    id: course.ID,
+    title: course.post_title,
+    subtitle: course.post_excerpt?.substring(0, 100) || "Pelajari langsung dari praktisi berpengalaman",
+    image: course.thumbnail_url || "/images/courses/placeholder.jpg",
+    modules: getModulesEstimate(course),
+    duration: getDurationFromAPI(course),
+    status: isComingSoon ? "coming-soon" : "active",
+    featured: false,
+    color: getCourseColor(course.post_title),
+    releaseDate: isComingSoon ? "Segera" : undefined,
+    targetAudience: targetAudience,
+    benefits: benefits.slice(0, 4),
+  };
+}
+
 const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.1,
-            delayChildren: 0.2,
-        },
-    },
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+  },
 };
 
-// Perbaiki cardVariants dengan tipe Variants
 const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: { duration: 0.6, ease: "easeOut" },
-    },
+  hidden: { opacity: 0, y: 50 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
 };
 
 export default function FeaturedClasses() {
+  const [courses, setCourses] = useState<TransformedCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isFromCache, setIsFromCache] = useState(false);
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        setLoading(true);
+
+        // Cek cache
+        const cachedData = loadFromCache();
+        if (cachedData && cachedData.length > 0) {
+          setCourses(cachedData);
+          setIsFromCache(true);
+          setLoading(false);
+
+          // Background fetch untuk update cache
+          try {
+            const apiCourses = await getAllCourses(1, 20);
+            
+            // 🔥 LOG DATA MENTAH JSON
+            console.log("\n");
+            console.log("╔════════════════════════════════════════════════════════════════════════════════════════════════╗");
+            console.log("║                              📦 RAW JSON RESPONSE DARI API TUTOR LMS                          ║");
+            console.log("╚════════════════════════════════════════════════════════════════════════════════════════════════╝");
+            console.log(JSON.stringify(apiCourses, null, 2));
+            console.log(`\n📊 Total Courses: ${apiCourses.length}\n`);
+            
+            const transformed = apiCourses.map((course: CourseFromAPI, idx: number) => transformCourse(course, idx));
+            setCourses(transformed);
+            saveToCache(transformed);
+            setIsFromCache(false);
+          } catch (bgError) {
+            console.warn("Background fetch failed:", bgError);
+          }
+          return;
+        }
+
+        // No cache - fetch langsung
+        const apiCourses = await getAllCourses(1, 20);
+        
+        // 🔥 LOG DATA MENTAH JSON
+        console.log("\n");
+        console.log("╔════════════════════════════════════════════════════════════════════════════════════════════════╗");
+        console.log("║                              📦 RAW JSON RESPONSE DARI API TUTOR LMS                          ║");
+        console.log("╚════════════════════════════════════════════════════════════════════════════════════════════════╝");
+        console.log(JSON.stringify(apiCourses, null, 2));
+        console.log(`\n📊 Total Courses: ${apiCourses.length}\n`);
+
+        const transformed = apiCourses.map((course: CourseFromAPI, idx: number) => transformCourse(course, idx));
+        setCourses(transformed);
+        saveToCache(transformed);
+        setError(null);
+      } catch (err) {
+        console.error("Failed to fetch courses:", err);
+        setError("Gagal memuat daftar kursus. Silakan coba lagi nanti.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCourses();
+  }, []);
+
+  // 🔥 TOMBOL DAFTAR - BUKA DI TAB BARU
+  const handleRegister = (courseId: number, courseTitle: string) => {
+    console.log(`🔘 [LOG] Register clicked: ${courseId} - ${courseTitle}`);
+    console.log(`🔘 [LOG] Opening link in new tab: https://kelasstruktur.com/rabbaja/`);
+    window.open("https://kelasstruktur.com/rabbaja/", "_blank");
+  };
+
+  if (loading && !isFromCache) {
     return (
-        <section
-            id="kelas"
-            className="snap-section relative overflow-hidden"
-            style={{ background: "linear-gradient(180deg, var(--bg-base) 0%, var(--bg-secondary) 100%)" }}
-        >
-            {/* Background decorative elements */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary-500/5 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary-500/5 rounded-full blur-3xl" />
-                
-                {/* Grid pattern overlay */}
-                <div className="absolute inset-0 blueprint-bg opacity-30" />
-            </div>
-
-            <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 flex flex-col justify-center min-h-screen py-20">
-                {/* Header dengan animasi lebih menarik */}
-                <AnimatedSection className="text-center mb-16">
-                    <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 0.5 }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-500/10 border border-primary-500/20 mb-6"
-                    >
-                        <Sparkles size={16} className="text-primary-500" />
-                        <span className="text-xs font-semibold text-primary-500 tracking-wider">KURIKULUM PREMIUM</span>
-                    </motion.div>
-                    
-                    <h2 className="font-display font-bold text-[clamp(2rem,5vw,3.5rem)] text-theme-primary leading-tight tracking-tight mb-4">
-                        Pilih{" "}
-                        <span className="gradient-text">Jalur Belajar</span>
-                        {" "}Kamu
-                    </h2>
-                    <p className="text-theme-secondary max-w-2xl mx-auto text-base leading-relaxed">
-                        Pelajari langsung dari praktisi berpengalaman dengan kurikulum yang terstruktur
-                    </p>
-                </AnimatedSection>
-
-                {/* Cards Grid */}
-                <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
-                >
-                    {classes.map((cls, index) => {
-                        const isComingSoon = cls.status === "coming-soon";
-                        // Fungsi untuk mengecek apakah students adalah number dan > 0
-                        const hasStudents = typeof cls.students === 'number' && cls.students > 0;
-                        // Atau jika students adalah string, tampilkan saja
-                        const showStudents = !isComingSoon && cls.students;
-                        
-                        return (
-                            <motion.div
-                                key={cls.id}
-                                variants={cardVariants}
-                                whileHover={!isComingSoon ? { y: -8, scale: 1.02 } : {}}
-                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                className={`group relative rounded-2xl overflow-hidden cursor-pointer ${
-                                    isComingSoon ? "opacity-90" : ""
-                                }`}
-                            >
-                                {/* Card Background with Gradient */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                
-                                {/* Image Container */}
-                                <div className="relative h-48 lg:h-56 overflow-hidden">
-                                    <Image
-                                        src={cls.image}
-                                        alt={cls.title}
-                                        fill
-                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
-                                    />
-                                    
-                                    {/* Overlay Gradient */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                    
-                                    {/* Status Badge */}
-                                    {isComingSoon ? (
-                                        <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm border border-yellow-500/50">
-                                            <div className="flex items-center gap-1.5">
-                                                <Calendar size={12} className="text-yellow-400" />
-                                                <span className="text-xs font-semibold text-yellow-400">Coming {cls.releaseDate}</span>
-                                            </div>
-                                        </div>
-                                    ) : cls.featured && (
-                                        <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-primary-500">
-                                            <div className="flex items-center gap-1.5">
-                                                <Sparkles size={12} className="text-white" />
-                                                <span className="text-xs font-bold text-white tracking-wide">PREMIUM</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Lock Icon for Coming Soon */}
-                                    {isComingSoon && (
-                                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
-                                            <div className="bg-black/60 backdrop-blur-md rounded-full p-4 border border-white/20">
-                                                <Lock size={32} className="text-white/60" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {/* Card Content */}
-                                <div className="relative p-6 bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-secondary)] backdrop-blur-sm border border-[var(--border-card)]">
-                                    {/* Title & Description */}
-                                    <div className="mb-4">
-                                        <h3 className="font-display font-bold text-xl text-theme-primary mb-2 line-clamp-1">
-                                            {cls.title}
-                                        </h3>
-                                        <p className="text-theme-secondary text-sm leading-relaxed line-clamp-2">
-                                            {cls.subtitle}
-                                        </p>
-                                    </div>
-                                    
-                                    {/* Stats */}
-                                    <div className="flex items-center justify-between mb-4 pt-3 border-t border-[var(--border-subtle)]">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex items-center gap-1.5">
-                                                <BookOpen size={14} className="text-primary-500" />
-                                                <span className="text-xs text-theme-secondary">
-                                                    {cls.modules} Modul
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-1.5">
-                                                <Clock size={14} className="text-primary-500" />
-                                                <span className="text-xs text-theme-secondary">
-                                                    {cls.duration}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        
-                                        {/* Perbaikan: tampilkan students jika ada dan bukan coming soon */}
-                                        {!isComingSoon && cls.students && (
-                                            <div className="flex items-center gap-1.5">
-                                                <Users size={14} className="text-primary-500" />
-                                                <span className="text-xs font-medium text-theme-primary">
-                                                    {cls.students} siswa
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    
-                                    {/* CTA Button */}
-                                    {isComingSoon ? (
-                                        <button
-                                            disabled
-                                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-gray-700/50 text-gray-400 cursor-not-allowed"
-                                        >
-                                            <Calendar size={16} />
-                                            Segera Hadir
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="group/btn relative w-full flex items-center justify-between py-3 px-4 rounded-xl text-sm font-semibold transition-all overflow-hidden bg-primary-500/10 hover:bg-primary-500 border border-primary-500/30 hover:border-primary-500"
-                                        >
-                                            <span className="text-primary-500 group-hover/btn:text-white transition-colors">
-                                                Lihat Detail Kelas
-                                            </span>
-                                            <ChevronRight 
-                                                size={16} 
-                                                className="text-primary-500 group-hover/btn:text-white group-hover/btn:translate-x-1 transition-all" 
-                                            />
-                                        </button>
-                                    )}
-                                    
-                                    {/* Glow effect on hover */}
-                                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-                                        <div className={`absolute inset-0 bg-gradient-to-r ${cls.color} rounded-2xl blur-2xl opacity-20`} />
-                                    </div>
-                                </div>
-                            </motion.div>
-                        );
-                    })}
-                </motion.div>
-                
-                {/* CTA Bottom dengan animasi */}
-                <AnimatedSection className="text-center mt-16" delay={0.3}>
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="inline-flex flex-col items-center gap-4"
-                    >
-                        <p className="text-theme-muted text-sm">
-                            Masih bingung mau mulai dari mana?
-                        </p>
-                        <button className="group flex items-center gap-2 text-primary-500 font-semibold hover:text-primary-400 transition-colors">
-                            Konsultasi dengan mentor kami
-                            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                        </button>
-                    </motion.div>
-                </AnimatedSection>
-            </div>
-        </section>
+      <section className="snap-section relative overflow-hidden min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
+          <p className="mt-4 text-theme-secondary">Memuat daftar kursus...</p>
+        </div>
+      </section>
     );
+  }
+
+  if (error && courses.length === 0) {
+    return (
+      <section className="snap-section relative overflow-hidden min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">⚠️</div>
+          <p className="text-theme-secondary">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-lg"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  if (courses.length === 0 && !loading) {
+    return (
+      <section className="snap-section relative overflow-hidden min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-theme-secondary">Belum ada kursus yang tersedia.</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      id="kelas"
+      className="snap-section relative overflow-hidden"
+      style={{
+        background: "linear-gradient(180deg, var(--bg-base) 0%, var(--bg-secondary) 100%)",
+      }}
+    >
+      {isFromCache && (
+        <div className="fixed bottom-4 left-4 z-50 text-xs bg-gray-800/80 text-white px-2 py-1 rounded-md backdrop-blur-sm">
+          📦 Data dari cache
+        </div>
+      )}
+
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary-500/5 rounded-full blur-3xl" />
+        <div className="absolute inset-0 blueprint-bg opacity-30" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 flex flex-col justify-center min-h-screen py-20">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-500/10 border border-primary-500/20 mb-6"
+          >
+            <Sparkles size={16} className="text-primary-500" />
+            <span className="text-xs font-semibold text-primary-500 tracking-wider">
+              KURIKULUM PREMIUM
+            </span>
+          </motion.div>
+
+          <h2 className="font-display font-bold text-[clamp(2rem,5vw,3.5rem)] text-theme-primary leading-tight tracking-tight mb-4">
+            Course <span className="gradient-text">Premium</span> Terbaru
+          </h2>
+          <p className="text-theme-secondary max-w-2xl mx-auto text-base leading-relaxed">
+            Di bimbing dari NOL, di temani dari BASIC dan bisa mentoring SETIAP HARI
+          </p>
+        </div>
+
+        {/* Cards Grid */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+        >
+          {courses.map((cls, idx) => {
+            const isComingSoon = cls.status === "coming-soon";
+
+            return (
+              <motion.div
+                key={cls.id}
+                variants={cardVariants}
+                whileHover={!isComingSoon ? { y: -8, scale: 1.02 } : {}}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className={`group relative rounded-2xl overflow-hidden cursor-pointer ${
+                  isComingSoon ? "opacity-90" : ""
+                }`}
+              >
+                <div className="absolute -inset-2 rounded-3xl opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none">
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-r ${cls.color} rounded-3xl blur-2xl opacity-60`}
+                  />
+                </div>
+
+                <div className="relative bg-gradient-to-br from-[var(--bg-card)] to-[var(--bg-secondary)] backdrop-blur-sm border border-[var(--border-card)] rounded-2xl overflow-hidden transition-all duration-300 group-hover:border-primary-500/50">
+                  {/* Image Container */}
+                  <div className="relative h-64 lg:h-80 overflow-hidden">
+                    <Image
+                      src={cls.image}
+                      alt={cls.title}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/images/courses/placeholder.jpg";
+                      }}
+                    />
+                    {isComingSoon && (
+                      <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm border border-yellow-500/50 z-10">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar size={12} className="text-yellow-400" />
+                          <span className="text-xs font-semibold text-yellow-400">Coming Soon</span>
+                        </div>
+                      </div>
+                    )}
+                    {isComingSoon && (
+                      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-10">
+                        <div className="bg-black/60 backdrop-blur-md rounded-full p-4 border border-white/20">
+                          <Lock size={32} className="text-white/60" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="relative p-6">
+                    <div className="mb-3">
+                      <h3 className="font-display font-bold text-xl text-theme-primary line-clamp-2">
+                        {cls.title}
+                      </h3>
+                    </div>
+
+                    <div className="flex items-center gap-4 mb-4 pt-3 border-t border-[var(--border-subtle)]">
+                      <div className="flex items-center gap-1.5">
+                        <BookOpen size={14} className="text-primary-500" />
+                        <span className="text-xs text-theme-secondary">{cls.modules} Modul</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Clock size={14} className="text-primary-500" />
+                        <span className="text-xs text-theme-secondary">{cls.duration}</span>
+                      </div>
+                    </div>
+
+                    {/* Target Audience */}
+                    {cls.targetAudience && cls.targetAudience.length > 0 && (
+                      <div className="mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Target size={14} className="text-primary-500" />
+                          <span className="text-xs font-semibold text-theme-primary uppercase tracking-wider">
+                            Untuk Kamu Yang:
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {cls.targetAudience.slice(0, 3).map((item, idx) => (
+                            <span key={idx} className="text-xs px-2 py-1 rounded-full bg-primary-500/10 text-primary-500">
+                              {item.replace(/^\d+\.\s*/, "")}
+                            </span>
+                          ))}
+                          {cls.targetAudience.length > 3 && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-gray-500/10 text-theme-muted">
+                              +{cls.targetAudience.length - 3} lainnya
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 🔥 CTA Button - Daftar Sekarang (Buka di Tab Baru) */}
+                    {isComingSoon ? (
+                      <button
+                        disabled
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-gray-700/50 text-gray-400 cursor-not-allowed"
+                      >
+                        <Calendar size={16} />
+                        Segera Hadir
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleRegister(cls.id, cls.title)}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all bg-primary-500 hover:bg-primary-600 text-white"
+                      >
+                        <span>Daftar Sekarang</span>
+                        <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+
+        {/* CTA Bottom */}
+        <div className="text-center mt-16">
+          <motion.div whileHover={{ scale: 1.05 }} className="inline-flex flex-col items-center gap-4">
+            <p className="text-theme-muted text-sm">Masih bingung mau mulai dari mana?</p>
+            <button
+              className="group text-3xl flex items-center gap-2 text-primary-500 font-semibold hover:text-primary-400 transition-colors"
+              onClick={() => window.open("https://wa.me/6285343602030", "_blank")}
+            >
+              Konsultasi dengan mentor kami
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
 }

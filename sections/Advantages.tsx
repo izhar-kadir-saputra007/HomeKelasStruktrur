@@ -85,7 +85,7 @@ export default function Advantages() {
                         <span className="gradient-text">Kelas Struktur</span>
                     </h2>
                     <p className="text-theme-secondary max-w-lg mx-auto text-base leading-relaxed">
-                        Kami hadir untuk memastikan perjalanan belajarmu efektif, menyenangkan, dan relevan dengan kebutuhan industri.
+                       Belajar sendiri itu sering bingung dan ragu dengan hasilnya. Gabung di Kelas Struktur, tempatnya konsultasi langsung sesuai studi kasus yang kamu kerjakan 
                     </p>
                 </motion.div>
 

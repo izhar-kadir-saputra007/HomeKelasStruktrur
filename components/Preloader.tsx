@@ -19,13 +19,13 @@ export default function Preloader() {
                     initial={{ opacity: 1 }}
                     exit={{ opacity: 0, scale: 1.05 }}
                     transition={{ duration: 0.6, ease: "easeInOut" }}
-                    className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0B0F14]"
+                    className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-theme-base"
                 >
                     {/* Blueprint grid background */}
                     <div className="absolute inset-0 blueprint-bg opacity-40" />
 
-                    {/* Radial glow */}
-                    <div className="absolute inset-0 bg-radial-gradient opacity-20 pointer-events-none" />
+                    {/* Radial glow - versi sederhana dengan warna solid */}
+                    <div className="absolute inset-0 pointer-events-none opacity-15 bg-gradient-radial from-primary-500/30 via-transparent to-transparent" />
 
                     <div className="relative z-10 flex flex-col items-center gap-8">
                         {/* Logo mark */}
@@ -54,17 +54,16 @@ export default function Preloader() {
                                         />
                                     </svg>
                                 </div>
-                                {/* Ping animation */}
                                 <span className="absolute inset-0 rounded-2xl border-2 border-primary-500 animate-ping opacity-40" />
                             </div>
 
                             {/* Brand name */}
                             <div className="text-center">
-                                <p className="font-display text-2xl font-bold tracking-tight text-white">
+                                <p className="font-display text-2xl font-bold tracking-tight text-theme-primary">
                                     Kelas{" "}
                                     <span className="gradient-text">Struktur</span>
                                 </p>
-                                <p className="text-xs text-white/40 tracking-[0.25em] mt-1 font-mono uppercase">
+                                <p className="text-xs text-theme-muted tracking-[0.25em] mt-1 font-mono uppercase">
                                     Engineering Platform
                                 </p>
                             </div>
@@ -77,7 +76,7 @@ export default function Preloader() {
                             transition={{ delay: 0.3 }}
                             className="w-64 flex flex-col gap-2"
                         >
-                            <div className="h-[2px] w-full bg-white/10 rounded-full overflow-hidden">
+                            <div className="h-[2px] w-full bg-theme-muted/30 rounded-full overflow-hidden">
                                 <motion.div
                                     initial={{ width: "0%" }}
                                     animate={{ width: "100%" }}
@@ -86,7 +85,7 @@ export default function Preloader() {
                                 />
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-[10px] text-white/30 tracking-widest font-mono uppercase">Loading</span>
+                                <span className="text-[10px] text-theme-muted tracking-widest font-mono uppercase">Loading</span>
                                 <motion.span
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
