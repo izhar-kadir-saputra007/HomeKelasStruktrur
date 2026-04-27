@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import Image from "next/image"; // 🔥 IMPORT Image dari Next.js
 
 export default function Preloader() {
     const [loading, setLoading] = useState(true);
@@ -35,24 +36,17 @@ export default function Preloader() {
                             transition={{ duration: 0.5, ease: "easeOut" }}
                             className="flex flex-col items-center gap-3"
                         >
-                            {/* Logo icon */}
+                            {/* Logo icon - Menggunakan gambar dari public/logo.png */}
                             <div className="relative">
-                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-[0_0_40px_rgba(4,166,61,0.4)]">
-                                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                                        <path
-                                            d="M4 24L28 24M4 16H22M4 8H16"
-                                            stroke="white"
-                                            strokeWidth="2.5"
-                                            strokeLinecap="round"
-                                        />
-                                        <path
-                                            d="M24 4L28 8L24 12"
-                                            stroke="white"
-                                            strokeWidth="2.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                    </svg>
+                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-[0_0_40px_rgba(4,166,61,0.4)] overflow-hidden">
+                                    <Image
+                                        src="/logo.png"
+                                        alt="Kelas Struktur Logo"
+                                        width={64}
+                                        height={64}
+                                        className="object-cover w-full h-full"
+                                        priority
+                                    />
                                 </div>
                                 <span className="absolute inset-0 rounded-2xl border-2 border-primary-500 animate-ping opacity-40" />
                             </div>

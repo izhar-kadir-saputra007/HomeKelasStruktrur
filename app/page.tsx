@@ -13,6 +13,7 @@ const HowItWorks = dynamic(() => import("@/sections/HowItWorks"), { ssr: false }
 const Testimonials = dynamic(() => import("@/sections/Testimonials"), { ssr: false });
 const CallToAction = dynamic(() => import("@/sections/CallToAction"), { ssr: false });
 const FaqSection = dynamic(() => import("@/sections/FaqSection"), { ssr: false });
+const CurvedLoop = dynamic(() => import("@/sections/CurvedLoopSection"), { ssr: false });
 
 export default function Home() {
   return (
@@ -26,6 +27,7 @@ export default function Home() {
         <HowItWorks />
         <Testimonials />
         <FaqSection />
+        {/* <CurvedLoop /> */}
         <CallToAction />
       </main>
       <Footer />

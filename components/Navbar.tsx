@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
 
 const navLinks = [
     { id: 1, label: "Beranda", href: "/", section: "hero", isHash: false },
@@ -13,7 +14,8 @@ const navLinks = [
     { id: 3, label: "Keunggulan", href: "/#keunggulan", section: "keunggulan", isHash: true },
     { id: 4, label: "Cara Kerja", href: "/#cara-kerja", section: "cara-kerja", isHash: true },
     { id: 5, label: "Testimoni", href: "/#testimoni", section: "testimoni", isHash: true },
-    { id: 6, label: "Kontak", href: "/contact", section: null, isHash: false },
+    { id: 6, label: "Artikel", href: "/articles", section: null, isHash: false },
+    { id: 7, label: "Kontak", href: "/contact", section: null, isHash: false },
 ];
 
 export default function Navbar() {
@@ -22,25 +24,33 @@ export default function Navbar() {
     const [activeSection, setActiveSection] = useState("hero");
     const pathname = usePathname();
     const router = useRouter();
-    
-    const isHomePage = pathname === "/";
-    const isContactPage = pathname === "/contact";
 
-    // Handle scroll effect untuk navbar background
+    // 🔥 PERBAIKAN: Hilangkan trailing slash untuk perbandingan
+    const normalizedPathname = pathname.replace(/\/$/, ""); // Hapus trailing slash
+    const isHomePage = normalizedPathname === "";
+    const isContactPage = normalizedPathname === "/contact";
+    const isArticlesPage = normalizedPathname === "/articles";
+
+    // 🔍 DEBUG — lihat nilai tiap render
+    console.log("=== NAVBAR RENDER ===");
+    console.log("original pathname   :", pathname);
+    console.log("normalizedPathname  :", normalizedPathname);
+    console.log("isHomePage          :", isHomePage);
+    console.log("isContactPage       :", isContactPage);
+    console.log("isArticlesPage      :", isArticlesPage);
+    console.log("activeSection       :", activeSection);
+
     useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 40);
-        };
+        const handleScroll = () => setScrolled(window.scrollY > 40);
         window.addEventListener("scroll", handleScroll, { passive: true });
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // Intersection observer untuk mendeteksi section aktif di homepage
+    // Intersection observer untuk homepage
     useEffect(() => {
         if (!isHomePage) return;
         
         const sectionIds = ["hero", "kelas", "keunggulan", "cara-kerja", "testimoni"];
-            
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
@@ -60,19 +70,22 @@ export default function Navbar() {
         return () => observer.disconnect();
     }, [isHomePage]);
 
-    // Handle navigasi klik
+    // Reset activeSection ketika tidak di homepage
+    useEffect(() => {
+        if (!isHomePage) {
+            setActiveSection("");
+        }
+    }, [isHomePage]);
+
     const handleNavClick = (href: string, section?: string | null, isHash?: boolean) => {
         setMenuOpen(false);
         
-        // Untuk halaman biasa (seperti /contact)
         if (!isHash) {
             router.push(href);
             return;
         }
         
-        // Untuk hash link (/#kelas, dll)
         if (isHomePage && section) {
-            // Sudah di homepage, langsung scroll
             const element = document.getElementById(section);
             if (element) {
                 element.scrollIntoView({ behavior: "smooth" });
@@ -80,24 +93,24 @@ export default function Navbar() {
                 setActiveSection(section);
             }
         } else if (section) {
-            // Di halaman lain, arahkan ke homepage dengan hash
             router.push(href);
         }
     };
 
-    // Cek apakah link aktif
-    const isLinkActive = (href: string, section?: string | null, isHash?: boolean) => {
-        // Untuk halaman Kontak
+    const isLinkActive = (href: string, section?: string | null, isHash?: boolean): boolean => {
+        // 🔥 PERBAIKAN: Bandingkan dengan normalizedPathname
         if (href === "/contact") {
             return isContactPage;
         }
         
-        // Untuk homepage (tanpa hash)
+        if (href === "/articles") {
+            return isArticlesPage;
+        }
+        
         if (href === "/" && !isHash) {
             return isHomePage && activeSection === "hero";
         }
         
-        // Untuk hash link (/#kelas, dll) di homepage
         if (isHash && isHomePage && section) {
             return activeSection === section;
         }
@@ -127,11 +140,15 @@ export default function Navbar() {
                             onClick={() => handleNavClick("/#hero", "hero", true)}
                             className="flex items-center gap-3 group cursor-pointer"
                         >
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-[0_0_20px_rgba(4,166,61,0.3)] group-hover:shadow-[0_0_30px_rgba(4,166,61,0.5)] transition-shadow">
-                                <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
-                                    <path d="M4 24L28 24M4 16H22M4 8H16" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-                                    <path d="M24 4L28 8L24 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
+                            <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-[0_0_20px_rgba(4,166,61,0.3)] group-hover:shadow-[0_0_30px_rgba(4,166,61,0.5)] transition-shadow">
+                                <Image
+                                    src="/logo.png"
+                                    alt="Kelas Struktur Logo"
+                                    width={36}
+                                    height={36}
+                                    className="object-cover w-full h-full"
+                                    priority
+                                />
                             </div>
                             <span className="font-display font-bold text-lg tracking-tight text-theme-primary">
                                 Kelas <span className="text-primary-500">Struktur</span>
@@ -142,8 +159,7 @@ export default function Navbar() {
                         <div className="hidden lg:flex items-center gap-1">
                             {navLinks.map((link) => {
                                 const isActive = isLinkActive(link.href, link.section, link.isHash);
-                                
-                                // Untuk hash link (Kelas, Keunggulan, dll) - gunakan button
+
                                 if (link.isHash) {
                                     return (
                                         <button
@@ -166,8 +182,7 @@ export default function Navbar() {
                                         </button>
                                     );
                                 }
-                                
-                                // Untuk halaman biasa (Beranda, Kontak) - gunakan Link dari Next.js
+
                                 return (
                                     <Link
                                         key={link.id}
@@ -231,7 +246,33 @@ export default function Navbar() {
                         <div className="px-6 py-4 flex flex-col gap-1">
                             {navLinks.map((link, i) => {
                                 const isActive = isLinkActive(link.href, link.section, link.isHash);
-                                
+
+                                if (!link.isHash) {
+                                    return (
+                                        <motion.div
+                                            key={link.id}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: i * 0.05 }}
+                                        >
+                                            <Link
+                                                href={link.href}
+                                                onClick={() => setMenuOpen(false)}
+                                                className={`block text-left px-4 py-3 text-sm font-medium transition-all rounded-xl cursor-pointer ${
+                                                    isActive
+                                                        ? "text-primary-500 bg-primary-500/10"
+                                                        : "text-theme-secondary hover:text-primary-500 hover:bg-primary-500/5"
+                                                }`}
+                                            >
+                                                {link.label}
+                                                {isActive && (
+                                                    <span className="inline-block ml-2 w-1.5 h-1.5 rounded-full bg-primary-500" />
+                                                )}
+                                            </Link>
+                                        </motion.div>
+                                    );
+                                }
+
                                 return (
                                     <motion.button
                                         key={link.id}

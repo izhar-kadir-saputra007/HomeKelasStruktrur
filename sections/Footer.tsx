@@ -1,6 +1,7 @@
 "use client";
 
 import { Globe, MessageCircle, Mail, Link2, ArrowRight } from "lucide-react";
+import Image from "next/image"; // 🔥 IMPORT Image dari Next.js
 
 const footerLinks = {
     Platform: ["Semua Kelas", "Instruktur", "Sertifikat", "Blog"],
@@ -29,11 +30,16 @@ export default function Footer() {
                     {/* Brand column */}
                     <div className="lg:col-span-2">
                         <div className="flex items-center gap-3 mb-5">
-                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center">
-                                <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
-                                    <path d="M4 24L28 24M4 16H22M4 8H16" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-                                    <path d="M24 4L28 8L24 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
+                            {/* Logo icon - Menggunakan gambar dari public/logo.png */}
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center overflow-hidden">
+                                <Image
+                                    src="/logo.png"
+                                    alt="Kelas Struktur Logo"
+                                    width={36}
+                                    height={36}
+                                    className="object-cover w-full h-full"
+                                    priority
+                                />
                             </div>
                             <span className="font-display font-bold text-lg text-white">
                                 Kelas <span className="text-primary-400">Struktur</span>
