@@ -13,13 +13,14 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { getAllCourses } from "@/lib/tutor-api";
-import PromoModal from "@/components/sections/PromoModal"; // 🔥 IMPORT MODAL
+import PromoModal from "@/components/sections/PromoModal";
 
 // Interface untuk data course dari API
 interface CourseFromAPI {
   ID: number;
   post_title: string;
   post_excerpt: string;
+  post_status: string; // 🔥 TAMBAHKAN FIELD post_status
   thumbnail_url: string;
   additional_info: {
     course_duration: Array<{ hours: number; minutes: number; seconds: number }>;
@@ -141,7 +142,10 @@ function getCourseColor(title: string): string {
 }
 
 function transformCourse(course: CourseFromAPI, index: number): TransformedCourse {
-  const isComingSoon = course.ID === 9999;
+  // 🔥 CEK STATUS - Jika pending, jangan ditampilkan
+  const isPending = course.post_status === "pending";
+  const isComingSoon = course.ID === 9999 || isPending;
+  
   let targetAudience: string[] = [];
   let benefits: string[] = [];
 
@@ -191,11 +195,11 @@ export default function FeaturedClasses() {
   const [error, setError] = useState<string | null>(null);
   const [isFromCache, setIsFromCache] = useState(false);
   
-  // 🔥 NEW: State untuk modal
+  // State untuk modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hasShownModal, setHasShownModal] = useState(false);
 
-  // 🔥 NEW: Effect untuk menampilkan modal saat section visible
+  // Effect untuk menampilkan modal saat section visible
   useEffect(() => {
     const section = document.getElementById('kelas');
     if (!section) return;
@@ -203,9 +207,7 @@ export default function FeaturedClasses() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          // Saat section terlihat dan modal belum pernah ditampilkan
           if (entry.isIntersecting && !hasShownModal && !loading) {
-            // Delay 1 detik setelah section terlihat
             const timer = setTimeout(() => {
               setIsModalOpen(true);
               setHasShownModal(true);
@@ -215,7 +217,7 @@ export default function FeaturedClasses() {
           }
         });
       },
-      { threshold: 0.3 } // Muncul saat 30% section terlihat
+      { threshold: 0.3 }
     );
 
     observer.observe(section);
@@ -225,7 +227,7 @@ export default function FeaturedClasses() {
     };
   }, [loading, hasShownModal]);
 
-  // 🔥 Modal register handler
+  // Modal register handler
   const handleModalRegister = (courseId: number, courseTitle: string) => {
     console.log(`🎉 [PROMO] Register from modal: ${courseId} - ${courseTitle}`);
     window.open("https://kelasstruktur.com/rabbaja/", "_blank");
@@ -247,15 +249,25 @@ export default function FeaturedClasses() {
           try {
             const apiCourses = await getAllCourses(1, 20);
             
-            // 🔥 LOG DATA MENTAH JSON
-            console.log("\n");
-            console.log("╔════════════════════════════════════════════════════════════════════════════════════════════════╗");
-            console.log("║                              📦 RAW JSON RESPONSE DARI API TUTOR LMS                          ║");
-            console.log("╚════════════════════════════════════════════════════════════════════════════════════════════════╝");
-            console.log(JSON.stringify(apiCourses, null, 2));
-            console.log(`\n📊 Total Courses: ${apiCourses.length}\n`);
+            // 🔥 LOG DATA MENTAH JSON - TANPA FORMAT APAPUN
+            console.log("\n========== RAW API RESPONSE (NO FORMAT) ==========");
+            console.log(apiCourses);
+            console.log(`\nTotal Courses from API: ${apiCourses.length}`);
             
-            const transformed = apiCourses.map((course: CourseFromAPI, idx: number) => transformCourse(course, idx));
+            // 🔥 LOG KHUSUS UNTUK CEK post_status
+            console.log("\n========== CHECKING post_status ==========");
+            apiCourses.forEach((course: CourseFromAPI, idx: number) => {
+              console.log(`[${idx + 1}] ID: ${course.ID} | Title: ${course.post_title} | Status: ${course.post_status || 'UNDEFINED'}`);
+            });
+            
+            // 🔥 FILTER: Hanya tampilkan course dengan post_status = "publish"
+            const publishedCourses = apiCourses.filter(
+              (course: CourseFromAPI) => course.post_status === "publish"
+            );
+            
+            console.log(`\n📊 Filtered - Publish: ${publishedCourses.length} | Pending/Other: ${apiCourses.length - publishedCourses.length}`);
+            
+            const transformed = publishedCourses.map((course: CourseFromAPI, idx: number) => transformCourse(course, idx));
             setCourses(transformed);
             saveToCache(transformed);
             setIsFromCache(false);
@@ -268,15 +280,37 @@ export default function FeaturedClasses() {
         // No cache - fetch langsung
         const apiCourses = await getAllCourses(1, 20);
         
-        // 🔥 LOG DATA MENTAH JSON
-        console.log("\n");
-        console.log("╔════════════════════════════════════════════════════════════════════════════════════════════════╗");
-        console.log("║                              📦 RAW JSON RESPONSE DARI API TUTOR LMS                          ║");
-        console.log("╚════════════════════════════════════════════════════════════════════════════════════════════════╝");
-        console.log(JSON.stringify(apiCourses, null, 2));
-        console.log(`\n📊 Total Courses: ${apiCourses.length}\n`);
+        // 🔥 LOG DATA MENTAH JSON - TANPA FORMAT APAPUN
+        console.log("\n========== RAW API RESPONSE (NO FORMAT) ==========");
+        console.log(apiCourses);
+        console.log(`\nTotal Courses from API: ${apiCourses.length}`);
+        
+        // 🔥 LOG KHUSUS UNTUK CEK post_status
+        console.log("\n========== CHECKING post_status ==========");
+        apiCourses.forEach((course: CourseFromAPI, idx: number) => {
+          console.log(`[${idx + 1}] ID: ${course.ID} | Title: ${course.post_title} | Status: ${course.post_status || 'UNDEFINED'}`);
+        });
+        
+        // 🔥 FILTER: Hanya tampilkan course dengan post_status = "publish"
+        const publishedCourses = apiCourses.filter(
+          (course: CourseFromAPI) => course.post_status === "publish"
+        );
+        
+        console.log(`\n📊 Filtered - Publish: ${publishedCourses.length} | Pending/Other: ${apiCourses.length - publishedCourses.length}`);
+        
+        // Tampilkan course yang pending/draft jika ada
+        const nonPublishedCourses = apiCourses.filter(
+          (course: CourseFromAPI) => course.post_status !== "publish"
+        );
+        
+        if (nonPublishedCourses.length > 0) {
+          console.log("\n⚠️ Courses with status NOT 'publish':");
+          nonPublishedCourses.forEach((course: CourseFromAPI) => {
+            console.log(`   - ID: ${course.ID} | Title: ${course.post_title} | Status: ${course.post_status}`);
+          });
+        }
 
-        const transformed = apiCourses.map((course: CourseFromAPI, idx: number) => transformCourse(course, idx));
+        const transformed = publishedCourses.map((course: CourseFromAPI, idx: number) => transformCourse(course, idx));
         setCourses(transformed);
         saveToCache(transformed);
         setError(null);
@@ -291,7 +325,7 @@ export default function FeaturedClasses() {
     fetchCourses();
   }, []);
 
-  // 🔥 TOMBOL DAFTAR - BUKA DI TAB BARU
+  // TOMBOL DAFTAR - BUKA DI TAB BARU
   const handleRegister = (courseId: number, courseTitle: string) => {
     console.log(`🔘 [LOG] Register clicked: ${courseId} - ${courseTitle}`);
     console.log(`🔘 [LOG] Opening link in new tab: https://kelasstruktur.com/rabbaja/`);
@@ -338,7 +372,6 @@ export default function FeaturedClasses() {
 
   return (
     <>
-      {/* 🔥 Promo Modal */}
       <PromoModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -387,7 +420,7 @@ export default function FeaturedClasses() {
             </p>
           </div>
 
-          {/* Cards Grid */}
+          {/* Cards Grid - Rest of your existing JSX */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -487,7 +520,7 @@ export default function FeaturedClasses() {
                         </div>
                       )}
 
-                      {/* CTA Button - Daftar Sekarang (Buka di Tab Baru) */}
+                      {/* CTA Button */}
                       {isComingSoon ? (
                         <button
                           disabled

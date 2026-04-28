@@ -9,13 +9,13 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 
 const navLinks = [
-    { id: 1, label: "Beranda", href: "/", section: "hero", isHash: false },
-    { id: 2, label: "Kelas", href: "/#kelas", section: "kelas", isHash: true },
-    { id: 3, label: "Keunggulan", href: "/#keunggulan", section: "keunggulan", isHash: true },
-    { id: 4, label: "Cara Kerja", href: "/#cara-kerja", section: "cara-kerja", isHash: true },
-    { id: 5, label: "Testimoni", href: "/#testimoni", section: "testimoni", isHash: true },
-    { id: 6, label: "Artikel", href: "/articles", section: null, isHash: false },
-    { id: 7, label: "Kontak", href: "/contact", section: null, isHash: false },
+    { id: 1, label: "Beranda", href: "/", section: "hero", isHash: false, isExternal: false },
+    { id: 2, label: "Kelas", href: "https://kelasstruktur.com/kelas/", section: null, isHash: false, isExternal: true },
+    { id: 3, label: "Keunggulan", href: "/#keunggulan", section: "keunggulan", isHash: true, isExternal: false },
+    { id: 4, label: "Cara Kerja", href: "/#cara-kerja", section: "cara-kerja", isHash: true, isExternal: false },
+    { id: 5, label: "Testimoni", href: "/#testimoni", section: "testimoni", isHash: true, isExternal: false },
+    { id: 6, label: "Artikel", href: "/articles", section: null, isHash: false, isExternal: false },
+    { id: 7, label: "Kontak", href: "/contact", section: null, isHash: false, isExternal: false },
 ];
 
 export default function Navbar() {
@@ -25,19 +25,21 @@ export default function Navbar() {
     const pathname = usePathname();
     const router = useRouter();
 
-    // 🔥 PERBAIKAN: Hilangkan trailing slash untuk perbandingan
-    const normalizedPathname = pathname.replace(/\/$/, ""); // Hapus trailing slash
+    // Hilangkan trailing slash untuk perbandingan
+    const normalizedPathname = pathname.replace(/\/$/, "");
     const isHomePage = normalizedPathname === "";
     const isContactPage = normalizedPathname === "/contact";
     const isArticlesPage = normalizedPathname === "/articles";
+    const isKelasPage = normalizedPathname === "/kelas";
 
-    // 🔍 DEBUG — lihat nilai tiap render
+    // Debug log
     console.log("=== NAVBAR RENDER ===");
     console.log("original pathname   :", pathname);
     console.log("normalizedPathname  :", normalizedPathname);
     console.log("isHomePage          :", isHomePage);
     console.log("isContactPage       :", isContactPage);
     console.log("isArticlesPage      :", isArticlesPage);
+    console.log("isKelasPage         :", isKelasPage);
     console.log("activeSection       :", activeSection);
 
     useEffect(() => {
@@ -50,7 +52,7 @@ export default function Navbar() {
     useEffect(() => {
         if (!isHomePage) return;
         
-        const sectionIds = ["hero", "kelas", "keunggulan", "cara-kerja", "testimoni"];
+        const sectionIds = ["hero", "keunggulan", "cara-kerja", "testimoni"];
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
@@ -77,6 +79,7 @@ export default function Navbar() {
         }
     }, [isHomePage]);
 
+    // Handle navigasi internal
     const handleNavClick = (href: string, section?: string | null, isHash?: boolean) => {
         setMenuOpen(false);
         
@@ -97,14 +100,32 @@ export default function Navbar() {
         }
     };
 
-    const isLinkActive = (href: string, section?: string | null, isHash?: boolean): boolean => {
-        // 🔥 PERBAIKAN: Bandingkan dengan normalizedPathname
+    // 🔥 Fungsi untuk handle link eksternal (Kelas)
+    const handleExternalLink = (url: string) => {
+        setMenuOpen(false);
+        window.open(url, "_blank"); // Buka di tab baru
+        // atau window.location.href = url; // Buka di tab yang sama
+    };
+
+    // Fungsi untuk handle button "Mulai Belajar"
+    const handleStartLearning = () => {
+        window.open("https://kelasstruktur.com/masuk-daftar/", "_blank");
+    };
+
+    const isLinkActive = (href: string, section?: string | null, isHash?: boolean, isExternal?: boolean): boolean => {
+        // Link eksternal tidak pernah aktif
+        if (isExternal) return false;
+        
         if (href === "/contact") {
             return isContactPage;
         }
         
         if (href === "/articles") {
             return isArticlesPage;
+        }
+        
+        if (href === "/kelas") {
+            return isKelasPage;
         }
         
         if (href === "/" && !isHash) {
@@ -137,7 +158,7 @@ export default function Navbar() {
                     <div className="flex items-center justify-between h-16 lg:h-20">
                         {/* Logo */}
                         <button
-                            onClick={() => handleNavClick("/#hero", "hero", true)}
+                            onClick={() => handleNavClick("/", "hero", false)}
                             className="flex items-center gap-3 group cursor-pointer"
                         >
                             <div className="relative w-9 h-9 rounded-xl overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-[0_0_20px_rgba(4,166,61,0.3)] group-hover:shadow-[0_0_30px_rgba(4,166,61,0.5)] transition-shadow">
@@ -158,7 +179,20 @@ export default function Navbar() {
                         {/* Desktop Navigation */}
                         <div className="hidden lg:flex items-center gap-1">
                             {navLinks.map((link) => {
-                                const isActive = isLinkActive(link.href, link.section, link.isHash);
+                                const isActive = isLinkActive(link.href, link.section, link.isHash, link.isExternal);
+
+                                // 🔥 Handle link eksternal (Kelas)
+                                if (link.isExternal) {
+                                    return (
+                                        <button
+                                            key={link.id}
+                                            onClick={() => handleExternalLink(link.href)}
+                                            className={`relative px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg cursor-pointer text-theme-secondary hover:text-theme-primary`}
+                                        >
+                                            <span className="relative z-10">{link.label}</span>
+                                        </button>
+                                    );
+                                }
 
                                 if (link.isHash) {
                                     return (
@@ -173,7 +207,7 @@ export default function Navbar() {
                                         >
                                             {isActive && (
                                                 <motion.span
-                                                    layoutId="nav-indicator"
+                                                    layoutId="nav-indicator-section"
                                                     className="absolute inset-0 bg-primary-500/10 rounded-lg"
                                                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                                                 />
@@ -195,7 +229,7 @@ export default function Navbar() {
                                     >
                                         {isActive && (
                                             <motion.span
-                                                layoutId="nav-indicator"
+                                                layoutId="nav-indicator-page"
                                                 className="absolute inset-0 bg-primary-500/10 rounded-lg"
                                                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
                                             />
@@ -212,7 +246,7 @@ export default function Navbar() {
                             <motion.button
                                 whileHover={{ scale: 1.03 }}
                                 whileTap={{ scale: 0.97 }}
-                                onClick={() => handleNavClick("/#kelas", "kelas", true)}
+                                onClick={handleStartLearning}
                                 className="btn-primary text-sm py-2.5 px-5 relative z-10 cursor-pointer"
                             >
                                 Mulai Belajar
@@ -245,7 +279,23 @@ export default function Navbar() {
                     >
                         <div className="px-6 py-4 flex flex-col gap-1">
                             {navLinks.map((link, i) => {
-                                const isActive = isLinkActive(link.href, link.section, link.isHash);
+                                const isActive = isLinkActive(link.href, link.section, link.isHash, link.isExternal);
+
+                                // 🔥 Handle link eksternal (Kelas) di mobile
+                                if (link.isExternal) {
+                                    return (
+                                        <motion.button
+                                            key={link.id}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: i * 0.05 }}
+                                            onClick={() => handleExternalLink(link.href)}
+                                            className="text-left px-4 py-3 text-sm font-medium transition-all rounded-xl cursor-pointer text-theme-secondary hover:text-primary-500 hover:bg-primary-500/5"
+                                        >
+                                            {link.label}
+                                        </motion.button>
+                                    );
+                                }
 
                                 if (!link.isHash) {
                                     return (
@@ -297,7 +347,7 @@ export default function Navbar() {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: navLinks.length * 0.05 }}
-                                onClick={() => handleNavClick("/#kelas", "kelas", true)}
+                                onClick={handleStartLearning}
                                 className="mt-2 btn-primary text-sm relative z-10 text-center cursor-pointer"
                             >
                                 Mulai Belajar
