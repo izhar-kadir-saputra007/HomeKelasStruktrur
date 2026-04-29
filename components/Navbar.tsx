@@ -109,7 +109,7 @@ export default function Navbar() {
 
     // Fungsi untuk handle button "Mulai Belajar"
     const handleStartLearning = () => {
-        window.open("https://kelasstruktur.com/masuk-daftar/", "_blank");
+        window.open("https://kelasstruktur.com/member-area/", "_blank");
     };
 
     const isLinkActive = (href: string, section?: string | null, isHash?: boolean, isExternal?: boolean): boolean => {
